@@ -349,4 +349,4 @@ function Section({ title, icon: Icon, children }: { title: string; icon: any; ch
   );
 }
 
-import { FileText as _ } from "lucide-react"; // satisfy import groups; tree-shaken
+

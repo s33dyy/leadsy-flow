@@ -49,7 +49,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     last_activity_at: new Date(now - i * 12 * 60_000).toISOString(),
     ...l,
   }));
-  const { data: leads, error: leadErr } = await supabase.from("leads").insert(leadRows).select("id,name,company");
+  const { data: leads, error: leadErr } = await supabase.from("leads").insert(leadRows as any).select("id,name,company");
   if (leadErr) throw leadErr;
 
   // Workers

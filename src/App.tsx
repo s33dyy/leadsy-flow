@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Extension from "./pages/Extension";
 
 import AppShell from "./components/shell/AppShell";
@@ -21,6 +22,9 @@ import Integrations from "./pages/app/Integrations";
 import Settings from "./pages/app/Settings";
 
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./lib/auth-context";
+import { WorkspaceProvider } from "./lib/workspace-context";
+import ProtectedRoute from "./lib/protected-route";
 
 const queryClient = new QueryClient();
 
@@ -30,34 +34,39 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/extension" element={<Extension />} />
+        <AuthProvider>
+          <WorkspaceProvider>
+            <Routes>
+              {/* Public */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/extension" element={<Extension />} />
 
-          {/* Authenticated shell */}
-          <Route path="/app" element={<AppShell />}>
-            <Route index element={<Dashboard />} />
-            <Route path="leads" element={<CRM />} />
-            <Route path="workers" element={<Workers />} />
-            <Route path="approvals" element={<Approvals />} />
-            <Route path="communications" element={<Communications />} />
-            <Route path="tasks" element={<Tasks />} />
-            <Route path="integrations" element={<Integrations />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
+              {/* Authenticated */}
+              <Route path="/app" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+                <Route index element={<Dashboard />} />
+                <Route path="leads" element={<CRM />} />
+                <Route path="workers" element={<Workers />} />
+                <Route path="approvals" element={<Approvals />} />
+                <Route path="communications" element={<Communications />} />
+                <Route path="tasks" element={<Tasks />} />
+                <Route path="integrations" element={<Integrations />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
 
-          {/* Source aliases */}
-          <Route path="/dashboard" element={<Navigate to="/app" replace />} />
-          <Route path="/crm" element={<Navigate to="/app/leads" replace />} />
-          <Route path="/worker" element={<Navigate to="/app/workers" replace />} />
-          <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+              {/* Aliases */}
+              <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+              <Route path="/crm" element={<Navigate to="/app/leads" replace />} />
+              <Route path="/worker" element={<Navigate to="/app/workers" replace />} />
+              <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </WorkspaceProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,6 +1,53 @@
 import { activity, approvals, workers } from "@/lib/demo-data";
-import { ArrowRight, ArrowUpRight, Bot, CheckSquare, Sparkles, MessageSquare, ListChecks, Users2, Activity as ActivityIcon } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bot, CheckSquare, Sparkles, MessageSquare, ListChecks, Users2, Activity as ActivityIcon, Sparkle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useWorkspace } from "@/lib/workspace-context";
+import { useAuth } from "@/lib/auth-context";
+import { seedWorkspace } from "@/lib/seed";
+import { toast } from "sonner";
+
+function SeedBanner() {
+  const { current } = useWorkspace();
+  const { user } = useAuth();
+  const [hasData, setHasData] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!current) return;
+    supabase.from("leads").select("id", { head: true, count: "exact" }).eq("workspace_id", current.id)
+      .then(({ count }) => setHasData((count ?? 0) > 0));
+  }, [current?.id]);
+
+  if (hasData !== false) return null;
+
+  async function run() {
+    if (!current || !user) return;
+    setBusy(true);
+    try {
+      await seedWorkspace(current.id, user.id);
+      toast.success("Workspace populated with sample data");
+      setHasData(true);
+    } catch (e: any) {
+      toast.error(e.message || "Seed failed");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-[6px] border border-primary/30 bg-primary/5 px-4 py-3 text-[12.5px]">
+      <Sparkle className="h-4 w-4 text-primary" />
+      <div className="flex-1">
+        <div className="font-medium">Your workspace is empty</div>
+        <div className="text-muted-foreground">Load realistic sample leads, workers, approvals and conversations to explore the app.</div>
+      </div>
+      <button disabled={busy} onClick={run} className="inline-flex h-8 items-center gap-1.5 rounded-[5px] bg-primary px-3 text-[12px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Load sample data"}
+      </button>
+    </div>
+  );
+}
+
 
 const metrics = [
   { label: "New leads · 24h", value: 38, delta: "+12", to: "/app/leads", icon: Users2 },

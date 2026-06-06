@@ -55,7 +55,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
   // Workers
   const { data: workers, error: wErr } = await supabase
     .from("workers")
-    .insert(WORKERS_SEED.map(w => ({ ...w, workspace_id: workspaceId, last_run_at: new Date().toISOString() })))
+    .insert(WORKERS_SEED.map(w => ({ ...w, workspace_id: workspaceId, last_run_at: new Date().toISOString() })) as any)
     .select("id,name");
   if (wErr) throw wErr;
 
@@ -71,7 +71,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
       error: i % 9 === 0 ? "rate_limited" : null,
     }))
   );
-  await supabase.from("worker_executions").insert(execRows);
+  await supabase.from("worker_executions").insert(execRows as any);
 
   // Approvals
   const ap = [
@@ -86,13 +86,13 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     { kind: "task",     subject: "Schedule discovery call — Tomás Fernández", worker_name: "qualifier-v3", lead: 8,
       preview: "Thu 14:00 CET, 30m, with you. Matched availability + reply intent signal.", priority: "p1" },
   ];
-  await supabase.from("approvals").insert(ap.map(a => ({
+  await supabase.from("approvals").insert((ap.map(a => ({
     workspace_id: workspaceId,
     lead_id: leads![a.lead]?.id,
     kind: a.kind, subject: a.subject, preview: a.preview, priority: a.priority,
     worker_name: a.worker_name, requested_by: userId,
     payload: { generated: a.preview },
-  })));
+  }))) as any);
 
   // Tasks
   const tasks = [
@@ -104,14 +104,14 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     { title: "Draft follow-up — Camille",         priority: "low",    status: "todo",        ai_generated: true,  lead: 3, due: 4 },
     { title: "Onboard new workspace: Atelier",    priority: "medium", status: "done",        ai_generated: false, lead: -1, due: -1 },
   ];
-  await supabase.from("tasks").insert(tasks.map(t => ({
+  await supabase.from("tasks").insert((tasks.map(t => ({
     workspace_id: workspaceId,
     title: t.title, priority: t.priority, status: t.status,
     ai_generated: t.ai_generated,
     lead_id: t.lead >= 0 ? leads![t.lead].id : null,
     assignee_id: userId, created_by: userId,
     due_at: t.due >= 0 ? new Date(now + t.due * 86_400_000).toISOString() : null,
-  })));
+  }))) as any);
 
   // Conversations + messages
   const conv = [
@@ -122,7 +122,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     { lead: 9, channel: "messenger", preview: "Thanks for the intro — let me think on it.",  unread: 0, important: false, mins: 300 },
     { lead: 8, channel: "instagram", preview: "Putting you in touch with our portfolio lead.", unread: 0, important: true, mins: 480 },
   ];
-  const { data: convs } = await supabase.from("conversations").insert(conv.map(c => ({
+  const { data: convs } = await supabase.from("conversations").insert((conv.map(c => ({
     workspace_id: workspaceId,
     lead_id: leads![c.lead].id,
     channel: c.channel,
@@ -131,7 +131,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     important: c.important,
     unread_count: c.unread,
     last_message_at: new Date(now - c.mins * 60_000).toISOString(),
-  }))).select("id,lead_id");
+  })) as any).select("id,lead_id");
 
   // Thread for first conversation
   if (convs && convs[0]) {
@@ -143,12 +143,12 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
       { dir: "out", author: "You",                body: "Sharing our ops brief — typically 2-week diagnostic. Want 30 min Thursday?", mins: 1300, ai: false },
       { dir: "in",  author: "Marina Okafor",     body: "Sounds good — send the brief by Thursday.", mins: 4, ai: false },
     ];
-    await supabase.from("messages").insert(thread.map(m => ({
+    await supabase.from("messages").insert((thread.map(m => ({
       workspace_id: workspaceId,
       conversation_id: c0.id,
       direction: m.dir, author: m.author, body: m.body, ai_generated: m.ai,
       sent_at: new Date(now - m.mins * 60_000).toISOString(),
-    })));
+    }))) as any);
   }
 
   // Knowledge findings for first lead
@@ -157,11 +157,11 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     { workspace_id: workspaceId, lead_id: leads![0].id, kind: "signal",  title: "Hiring spike: Operations", body: "14 open ops roles posted in the last 21 days.", source: "company-enricher", confidence: 88 },
     { workspace_id: workspaceId, lead_id: leads![0].id, kind: "summary", title: "Last 5 messages", body: "Lead engaged, requested scope + brief, asked about timelines.", source: "thread-summarizer", confidence: 92 },
     { workspace_id: workspaceId, lead_id: leads![0].id, kind: "change",  title: "Qualification raised", body: "Warm → Hot (score 92). Trigger: explicit intent + budget signal.", source: "qualifier-v3", confidence: 90 },
-  ]);
+  ] as any);
 
   // Integrations
   await supabase.from("integrations").upsert(
-    INTEGRATIONS_SEED.map(i => ({ ...i, workspace_id: workspaceId, last_sync_at: new Date().toISOString() })),
+    INTEGRATIONS_SEED.map(i => ({ ...i, workspace_id: workspaceId, last_sync_at: new Date().toISOString() })) as any,
     { onConflict: "workspace_id,kind" }
   );
 
@@ -174,7 +174,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     { workspace_id: workspaceId, actor_id: userId, actor_label: "You",            kind: "message",  summary: "replied on WhatsApp to Aigerim Bekova" },
     { workspace_id: workspaceId, actor_label: "qualifier-v3",      kind: "task",     summary: "created task: Schedule discovery — Tomás Fernández" },
     { workspace_id: workspaceId, actor_label: "company-enricher",  kind: "research", summary: "enriched 8 companies" },
-  ]);
+  ] as any);
 }
 
 export async function clearWorkspaceData(workspaceId: string) {

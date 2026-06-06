@@ -92,7 +92,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     kind: a.kind, subject: a.subject, preview: a.preview, priority: a.priority,
     worker_name: a.worker_name, requested_by: userId,
     payload: { generated: a.preview },
-  }))) as any);
+  })))) as any);
 
   // Tasks
   const tasks = [
@@ -111,7 +111,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     lead_id: t.lead >= 0 ? leads![t.lead].id : null,
     assignee_id: userId, created_by: userId,
     due_at: t.due >= 0 ? new Date(now + t.due * 86_400_000).toISOString() : null,
-  }))) as any);
+  })))) as any);
 
   // Conversations + messages
   const conv = [
@@ -131,7 +131,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
     important: c.important,
     unread_count: c.unread,
     last_message_at: new Date(now - c.mins * 60_000).toISOString(),
-  })) as any).select("id,lead_id");
+  }))) as any).select("id,lead_id");
 
   // Thread for first conversation
   if (convs && convs[0]) {
@@ -148,7 +148,7 @@ export async function seedWorkspace(workspaceId: string, userId: string) {
       conversation_id: c0.id,
       direction: m.dir, author: m.author, body: m.body, ai_generated: m.ai,
       sent_at: new Date(now - m.mins * 60_000).toISOString(),
-    }))) as any);
+    })))) as any);
   }
 
   // Knowledge findings for first lead
